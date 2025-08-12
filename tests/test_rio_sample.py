@@ -16,18 +16,20 @@ def test_sample_err(runner):
 
 
 def test_sample_stdin_subprocess():
-    input_coords = b"[220650.0, 2719200.0]\n[220650.0, 2719200.0]\n"
+    input_coords = "[220650.0, 2719200.0]\n[220650.0, 2719200.0]\n"
     expected_output = '[18, 25, 14]\n[18, 25, 14]'
 
     proc = subprocess.run(
         ["rio", "sample", "tests/data/RGB.byte.tif"],
         input=input_coords,
-        capture_output=True
+        capture_output=True,
+        text=True  # enables universal newline mode (\r\n -> \n)
     )
 
-    output = proc.stdout.decode("utf-8").strip()
+    output = proc.stdout.strip()
     assert proc.returncode == 0
     assert output == expected_output, f"Got unexpected output: {repr(output)}"
+
 
 
 def test_sample_arg(runner):
