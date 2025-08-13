@@ -70,18 +70,18 @@ jobs:
       fail-fast: false
       matrix:
         include:      
-        # - os: ubuntu-22.04
-        #   arch: x86_64
-        # - os: ubuntu-22.04-arm
-        #   arch: aarch64
-        # - os: macos-13
-        #   arch: x86_64
-        #   cmake_osx_architectures: x86_64
-        #   macos_deployment_target: "13.0"
-        # - os: macos-14
-        #   arch: arm64
-        #   cmake_osx_architectures: arm64
-        #  macos_deployment_target: "14.0"
+         - os: ubuntu-22.04
+           arch: x86_64
+         - os: ubuntu-22.04-arm
+           arch: aarch64
+         - os: macos-13
+           arch: x86_64
+           cmake_osx_architectures: x86_64
+           macos_deployment_target: "13.0"
+         - os: macos-14
+           arch: arm64
+           cmake_osx_architectures: arm64
+           macos_deployment_target: "14.0"
          - os: "windows-2022"
            arch: "auto64"
            triplet: "x64-windows"
@@ -187,8 +187,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        #os: ["windows-2022", "windows-11-arm", "ubuntu-22.04-arm", "ubuntu-22.04", "macos-14", "macos-13"]
-        os: ["windows-2022", "windows-11-arm"]
+        os: ["windows-2022", "windows-11-arm", "ubuntu-22.04-arm", "ubuntu-22.04", "macos-14", "macos-13"]
         python-version: ["3.13", "3.12", "3.11", "3.10"]
         exclude:
          - os: "windows-11-arm"
