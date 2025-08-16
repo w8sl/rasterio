@@ -74,11 +74,11 @@ esac
 
 
 # ------------------------------------------------
-# From: 
-#    https://github.com/multi-build/multibuild/ 
-#	 https://github.com/rasterio/rasterio-wheels 
+# From:
+#    https://github.com/multi-build/multibuild/
+#	 https://github.com/rasterio/rasterio-wheels
 #    https://github.com/pyproj4/pyproj
-	 
+
 #    (with updates and modifications)
 # -----------------------------------------------
 
@@ -128,6 +128,276 @@ function update_env_for_build_prefix {
 }
 
 
+function build_hdf5 {
+    if [ -e hdf5-stamp ]; then return; fi
+    build_zlib
+    # libaec is a drop-in replacement for szip
+    build_libaec
+    HDF5_VERSION_UNDERSCORED="${HDF5_VERSION//./_}"
+    HDF5_VERSION_SHORT="${HDF5_VERSION_UNDERSCORED%_*}"
+    wget https://support.hdfgroup.org/releases/hdf5/v${HDF5_VERSION_SHORT}/v${HDF5_VERSION_UNDERSCORED}/downloads/hdf5-${HDF5_VERSION}.tar.gz
+    tar -xzf hdf5-${HDF5_VERSION}.tar.gz
+    (cd hdf5-${HDF5_VERSION} \
+        && export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BUILD_PREFIX/lib \
+        && export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$BUILD_PREFIX/lib \
+        && ./configure --with-szlib=$BUILD_PREFIX --prefix=$BUILD_PREFIX \
+        --enable-threadsafe --enable-unsupported --with-pthread=yes \
+        && make -j4 \
+        && make install)
+    touch hdf5-stamp
+}
+
+
+function build_blosc {
+    if [ -e blosc-stamp ]; then return; fi
+    local cmake=cmake
+    BLOSC_URL="https://github.com/Blosc/c-blosc/archive/refs/tags/v${BLOSC_VERSION}.tar.gz"
+    wget "$BLOSC_URL" -O "c-blosc-${BLOSC_VERSION}.tar.gz"
+    tar -xzf "c-blosc-${BLOSC_VERSION}.tar.gz"
+    (cd c-blosc-${BLOSC_VERSION} \
+        && $cmake -DCMAKE_INSTALL_PREFIX=$BUILD_PREFIX -DCMAKE_POLICY_VERSION_MINIMUM=3.5 . \
+        && make install)
+    if [ -n "$IS_MACOS" ]; then
+        # Fix blosc library id bug
+        for lib in $(ls ${BUILD_PREFIX}/lib/libblosc*.dylib); do
+            install_name_tool -id $lib $lib
+        done
+    fi
+    touch blosc-stamp
+}
+
+
+function build_geos {
+    CFLAGS="$CFLAGS -g -O2"
+    CXXFLAGS="$CXXFLAGS -g -O2"
+    if [ -e geos-stamp ]; then return; fi
+    local cmake=cmake
+    wget http://download.osgeo.org/geos/geos-${GEOS_VERSION}.tar.bz2
+    tar -xjf geos-${GEOS_VERSION}.tar.bz2
+    (cd geos-${GEOS_VERSION} \
+        && mkdir build && cd build \
+        && $cmake .. \
+        -DCMAKE_INSTALL_PREFIX:PATH=$BUILD_PREFIX \
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+	    -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
+        -DBUILD_SHARED_LIBS=ON \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DENABLE_IPO=ON \
+        -DBUILD_APPS:BOOL=OFF \
+        -DBUILD_TESTING:BOOL=OFF \
+        && $cmake --build . -j4 \
+        && $cmake --install .)
+    touch geos-stamp
+}
+
+
+function build_jsonc {
+    if [ -e jsonc-stamp ]; then return; fi
+    local cmake=cmake
+    wget https://s3.amazonaws.com/json-c_releases/releases/json-c-${JSONC_VERSION}.tar.gz
+    tar -xzf json-c-${JSONC_VERSION}.tar.gz
+    (cd json-c-${JSONC_VERSION} \
+        && $cmake -DCMAKE_INSTALL_PREFIX=$BUILD_PREFIX -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET -DCMAKE_POLICY_VERSION_MINIMUM=3.5 . \
+        && make -j4 \
+        && make install)
+    if [ -n "$IS_MACOS" ]; then
+        for lib in $(ls ${BUILD_PREFIX}/lib/libjson-c.5*.dylib); do
+            install_name_tool -id $lib $lib
+        done
+        for lib in $(ls ${BUILD_PREFIX}/lib/libjson-c.dylib); do
+            install_name_tool -id $lib $lib
+        done
+    fi
+    touch jsonc-stamp
+}
+
+
+function build_proj {
+    CFLAGS="$CFLAGS -DPROJ_RENAME_SYMBOLS -g -O2"
+    CXXFLAGS="$CXXFLAGS -DPROJ_RENAME_SYMBOLS -DPROJ_INTERNAL_CPP_NAMESPACE -g -O2"
+    if [ -e proj-stamp ]; then return; fi
+
+    if [ -n "$IS_MACOS" ]; then
+        SQLITE_LIB="$BUILD_PREFIX/lib/libsqlite3.dylib"
+    else
+        SQLITE_LIB="$BUILD_PREFIX/lib/libsqlite3.so"
+    fi
+
+    wget https://download.osgeo.org/proj/proj-${PROJ_VERSION}.tar.gz
+    tar -xzf proj-${PROJ_VERSION}.tar.gz
+
+    local cmake=cmake
+    (cd proj-${PROJ_VERSION} \
+        && $cmake . \
+        -DCMAKE_INSTALL_PREFIX:PATH=$BUILD_PREFIX \
+        -DCMAKE_PREFIX_PATH=${BUILD_PREFIX} \
+        -DCMAKE_INCLUDE_PATH=$BUILD_PREFIX/include \
+        -DSQLite3_INCLUDE_DIR=$BUILD_PREFIX/include \
+        -DSQLite3_LIBRARY=$SQLITE_LIB \
+        -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
+        -DBUILD_SHARED_LIBS=ON \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DENABLE_IPO=ON \
+        -DBUILD_APPS:BOOL=OFF \
+        -DBUILD_TESTING:BOOL=OFF \
+        && $cmake --build . -j$(nproc) \
+        && $cmake --install .)
+    touch proj-stamp
+}
+
+
+function build_sqlite {
+
+  if [ -z "$IS_MACOS" ]; then
+        CFLAGS="$CFLAGS -DHAVE_PREAD64 -DHAVE_PWRITE64"
+  fi
+
+  if [ -e sqlite-stamp ]; then return; fi
+  wget https://www.sqlite.org/2025/sqlite-autoconf-${SQLITE_VERSION}.tar.gz
+  tar -xzf sqlite-autoconf-${SQLITE_VERSION}.tar.gz
+
+  (cd sqlite-autoconf-${SQLITE_VERSION} \
+        && ./configure --enable-rtree --enable-threadsafe --prefix=$BUILD_PREFIX \
+        && make \
+        && make install)
+  touch sqlite-stamp
+}
+
+
+function build_expat {
+    if [ -e expat-stamp ]; then return; fi
+    if [ -n "$IS_MACOS" ]; then
+        :
+    else
+
+    EXPAT_VERSION_UNDERSCORED="${EXPAT_VERSION//./_}"
+	wget https://github.com/libexpat/libexpat/releases/download/R_${EXPAT_VERSION_UNDERSCORED}/expat-${EXPAT_VERSION}.tar.bz2
+    tar -xjf expat-${EXPAT_VERSION}.tar.bz2
+        (cd expat-${EXPAT_VERSION} \
+            && ./configure --prefix=$BUILD_PREFIX \
+            && make -j4 \
+            && make install)
+    fi
+    touch expat-stamp
+}
+
+
+function build_lerc {
+    CFLAGS="$CFLAGS -g -O2"
+    CXXFLAGS="$CXXFLAGS -g -O2"
+
+	if [ -e lerc-stamp ]; then return; fi
+    local cmake=cmake
+    wget https://github.com/Esri/lerc/archive/refs/tags/v${LERC_VERSION}.tar.gz -O lerc-$LERC_VERSION.tar.gz
+    tar -xzf lerc-${LERC_VERSION}.tar.gz
+    (cd lerc-${LERC_VERSION} \
+        && mkdir cmake_build && cd cmake_build \
+        && $cmake .. \
+        -DCMAKE_INSTALL_PREFIX=$BUILD_PREFIX \
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+	    -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
+        -DBUILD_SHARED_LIBS=ON \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DENABLE_IPO=ON \
+        && $cmake --build . -j4 \
+        && $cmake --install .)
+    touch lerc-stamp
+}
+
+
+function build_tiff {
+    CFLAGS="$CFLAGS -g -O2"
+    CXXFLAGS="$CXXFLAGS -g -O2"
+    if [ -e tiff-stamp ]; then return; fi
+    local cmake=cmake
+    build_lerc
+    build_jpeg
+    build_libwebp
+    build_zlib
+    build_zstd
+    build_xz
+    wget https://download.osgeo.org/libtiff/tiff-${TIFF_VERSION}.tar.gz
+    tar -xvf tiff-${TIFF_VERSION}.tar.gz
+
+    (cd tiff-${TIFF_VERSION} \
+        && cd build \
+        && $cmake .. \
+           -DCMAKE_BUILD_TYPE=Release \
+           -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+	       -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
+	       -DCMAKE_INSTALL_PREFIX:PATH=$BUILD_PREFIX \
+           -DCMAKE_PREFIX_PATH=${BUILD_PREFIX} \
+	       -DJPEG_SUPPORT=ON \
+           -DZSTD_SUPPORT=ON \
+	       -DWEBP_SUPPORT=ON \
+           -DLERC_SUPPORT=ON \
+        && $cmake --build . -j$(nproc) \
+        && $cmake --install .)
+    touch tiff-stamp
+}
+
+
+function build_openjpeg {
+
+  if [ -e openjpeg-stamp ]; then return; fi
+
+   build_zlib
+   build_tiff
+   build_lcms2
+
+   wget https://github.com/uclouvain/openjpeg/archive/refs/tags/v${OPENJPEG_VERSION}.tar.gz -O openjpeg-${OPENJPEG_VERSION}.tar.gz
+   tar -xvzf openjpeg-${OPENJPEG_VERSION}.tar.gz
+   local cmake=cmake
+  (cd openjpeg-${OPENJPEG_VERSION} \
+        && mkdir build \
+        && cd build \
+        && $cmake .. \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=$BUILD_PREFIX \
+        -DCMAKE_PREFIX_PATH=${BUILD_PREFIX} \
+        -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+        -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
+        && $cmake --build . -j$(nproc) \
+        && $cmake --install .)
+
+    touch openjpeg-stamp
+}
+
+
+function build_libwebp {
+
+    build_libpng
+    build_giflib
+
+    if [ -e libwebp-stamp ]; then return; fi
+    wget https://github.com/webmproject/libwebp/archive/refs/tags/v$LIBWEBP_VERSION.tar.gz -O libwebp-$LIBWEBP_VERSION.tar.gz
+    tar -xzf libwebp-$LIBWEBP_VERSION.tar.gz
+
+    (cd libwebp-$LIBWEBP_VERSION \
+       && ./autogen.sh \
+       && CPPFLAGS="-I$BUILD_PREFIX/include" \
+        LDFLAGS="-L$BUILD_PREFIX/lib" \
+        ./configure --prefix=$BUILD_PREFIX \
+                 --enable-libwebpmux \
+                 --enable-libwebpdemux \
+       && make \
+       && make install)
+    touch libwebp-stamp
+}
+
+
+function build_nghttp2 {
+    if [ -e nghttp2-stamp ]; then return; fi
+    wget https://github.com/nghttp2/nghttp2/releases/download/v${NGHTTP2_VERSION}/nghttp2-${NGHTTP2_VERSION}.tar.gz
+    tar -xzf nghttp2-${NGHTTP2_VERSION}.tar.gz
+    (cd nghttp2-${NGHTTP2_VERSION}  \
+        && ./configure --enable-lib-only --prefix=$BUILD_PREFIX \
+        && make -j4 \
+        && make install)
+    touch nghttp2-stamp
+}
+
+
 function build_openssl {
     if [ -e openssl-stamp ]; then return; fi
 
@@ -174,181 +444,6 @@ function build_curl {
 }
 
 
-function build_zlib {
-    if [ -e zlib-stamp ]; then return; fi
-    # Careful, this one may cause yum to segfault
-    # Fossils directory should also contain latest
-    # build_simple zlib $ZLIB_VERSION https://zlib.net/fossils
-    wget https://www.zlib.net/zlib-$ZLIB_VERSION.tar.gz
-    tar -xvf zlib-$ZLIB_VERSION.tar.gz
-   (cd zlib-${ZLIB_VERSION} \
-    && ./configure --prefix=$BUILD_PREFIX \
-    && make \
-    && make install)
-    touch zlib-stamp
-}
-
-
-function build_tiff {
-    CFLAGS="$CFLAGS -g -O2"
-    CXXFLAGS="$CXXFLAGS -g -O2"
-    if [ -e tiff-stamp ]; then return; fi
-    local cmake=cmake
-    build_lerc
-    build_jpeg
-    build_libwebp
-    build_zlib
-    build_zstd
-    build_xz
-    wget https://download.osgeo.org/libtiff/tiff-${TIFF_VERSION}.tar.gz
-    tar -xvf tiff-${TIFF_VERSION}.tar.gz
-
-    (cd tiff-${TIFF_VERSION} \
-        && cd build \
-        && $cmake .. \
-           -DCMAKE_BUILD_TYPE=Release \
-           -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
-	       -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
-	       -DCMAKE_INSTALL_PREFIX:PATH=$BUILD_PREFIX \
-           -DCMAKE_PREFIX_PATH=${BUILD_PREFIX} \
-	       -DJPEG_SUPPORT=ON \
-           -DZSTD_SUPPORT=ON \
-	       -DWEBP_SUPPORT=ON \
-           -DLERC_SUPPORT=ON \
-        && $cmake --build . -j$(nproc) \
-        && $cmake --install .)
-    touch tiff-stamp
-}
-
-
-function build_libwebp {
-
-    build_libpng
-    build_giflib
-    
-    if [ -e libwebp-stamp ]; then return; fi
-    wget https://github.com/webmproject/libwebp/archive/refs/tags/v$LIBWEBP_VERSION.tar.gz -O libwebp-$LIBWEBP_VERSION.tar.gz
-    tar -xzf libwebp-$LIBWEBP_VERSION.tar.gz
-
-    (cd libwebp-$LIBWEBP_VERSION \
-       && ./autogen.sh \
-       && CPPFLAGS="-I$BUILD_PREFIX/include" \
-        LDFLAGS="-L$BUILD_PREFIX/lib" \
-        ./configure --prefix=$BUILD_PREFIX \
-                 --enable-libwebpmux \
-                 --enable-libwebpdemux \
-       && make \
-       && make install)
-    touch libwebp-stamp
-}
-
-
-function build_jpeg {
-
-    if [ -e jpeg-stamp ]; then return; fi
-    wget http://ijg.org/files/jpegsrc.v${JPEG_VERSION}.tar.gz
-    tar -xzf jpegsrc.v${JPEG_VERSION}.tar.gz
-    (cd jpeg-${JPEG_VERSION} \
-        && ./configure --prefix=$BUILD_PREFIX \
-        && make \
-        && make install)
-    touch jpeg-stamp
-}
-
-
-function build_openjpeg {
-
-  if [ -e openjpeg-stamp ]; then return; fi
-
-   build_zlib
-   build_tiff
-   build_lcms2
-
-   wget https://github.com/uclouvain/openjpeg/archive/refs/tags/v${OPENJPEG_VERSION}.tar.gz -O openjpeg-${OPENJPEG_VERSION}.tar.gz
-   tar -xvzf openjpeg-${OPENJPEG_VERSION}.tar.gz
-   local cmake=cmake
-  (cd openjpeg-${OPENJPEG_VERSION} \
-        && mkdir build \
-        && cd build \
-        && $cmake .. \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_INSTALL_PREFIX=$BUILD_PREFIX \
-        -DCMAKE_PREFIX_PATH=${BUILD_PREFIX} \
-        -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
-        -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
-        && $cmake --build . -j$(nproc) \
-        && $cmake --install .)
-		
-    touch openjpeg-stamp
-}
-
-
- function build_giflib {
-  if [ -e giflib-stamp ]; then return; fi
-  GIFLIB_TAR="giflib-${GIFLIB_VERSION}.tar.gz"
-  GIFLIB_URL="https://sourceforge.net/projects/giflib/files/giflib-${GIFLIB_VERSION}.tar.gz/download"
-  wget -O "$GIFLIB_TAR" "$GIFLIB_URL"
-  tar -xzf "$GIFLIB_TAR"
-        (cd "giflib-${GIFLIB_VERSION}" \
-        && make \
-        && make install PREFIX=$BUILD_PREFIX)
-        touch giflib-stamp
-}
-
-
-function build_sqlite {
-
-  if [ -z "$IS_MACOS" ]; then
-        CFLAGS="$CFLAGS -DHAVE_PREAD64 -DHAVE_PWRITE64"
-  fi
-
-  if [ -e sqlite-stamp ]; then return; fi
-  wget https://www.sqlite.org/2025/sqlite-autoconf-${SQLITE_VERSION}.tar.gz
-  tar -xzf sqlite-autoconf-${SQLITE_VERSION}.tar.gz
-
-  (cd sqlite-autoconf-${SQLITE_VERSION} \
-        && ./configure --enable-rtree --enable-threadsafe --prefix=$BUILD_PREFIX \
-        && make \
-        && make install)
-  touch sqlite-stamp
-}
-
-
-function build_nghttp2 {
-    if [ -e nghttp2-stamp ]; then return; fi
-    wget https://github.com/nghttp2/nghttp2/releases/download/v${NGHTTP2_VERSION}/nghttp2-${NGHTTP2_VERSION}.tar.gz
-    tar -xzf nghttp2-${NGHTTP2_VERSION}.tar.gz
-    (cd nghttp2-${NGHTTP2_VERSION}  \
-        && ./configure --enable-lib-only --prefix=$BUILD_PREFIX \
-        && make -j4 \
-        && make install)
-    touch nghttp2-stamp
-}
-
-
-function build_lerc {
-    CFLAGS="$CFLAGS -g -O2"
-    CXXFLAGS="$CXXFLAGS -g -O2"
-	
-	if [ -e lerc-stamp ]; then return; fi
-    local cmake=cmake
-    wget https://github.com/Esri/lerc/archive/refs/tags/v${LERC_VERSION}.tar.gz -O lerc-$LERC_VERSION.tar.gz
-    tar -xzf lerc-${LERC_VERSION}.tar.gz
-    (cd lerc-${LERC_VERSION} \
-        && mkdir cmake_build && cd cmake_build \
-        && $cmake .. \
-        -DCMAKE_INSTALL_PREFIX=$BUILD_PREFIX \
-        -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
-	    -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
-        -DBUILD_SHARED_LIBS=ON \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DENABLE_IPO=ON \
-        && $cmake --build . -j4 \
-        && $cmake --install .)
-    touch lerc-stamp
-}
-
-
 function build_zstd {
     CFLAGS="$CFLAGS -g -O2"
     CXXFLAGS="$CXXFLAGS -g -O2"
@@ -380,6 +475,47 @@ function build_zstd {
 }
 
 
+function build_zlib {
+    if [ -e zlib-stamp ]; then return; fi
+    # Careful, this one may cause yum to segfault
+    # Fossils directory should also contain latest
+    # build_simple zlib $ZLIB_VERSION https://zlib.net/fossils
+    wget https://www.zlib.net/zlib-$ZLIB_VERSION.tar.gz
+    tar -xvf zlib-$ZLIB_VERSION.tar.gz
+   (cd zlib-${ZLIB_VERSION} \
+    && ./configure --prefix=$BUILD_PREFIX \
+    && make \
+    && make install)
+    touch zlib-stamp
+}
+
+
+function build_jpeg {
+
+    if [ -e jpeg-stamp ]; then return; fi
+    wget http://ijg.org/files/jpegsrc.v${JPEG_VERSION}.tar.gz
+    tar -xzf jpegsrc.v${JPEG_VERSION}.tar.gz
+    (cd jpeg-${JPEG_VERSION} \
+        && ./configure --prefix=$BUILD_PREFIX \
+        && make \
+        && make install)
+    touch jpeg-stamp
+}
+
+
+ function build_giflib {
+  if [ -e giflib-stamp ]; then return; fi
+  GIFLIB_TAR="giflib-${GIFLIB_VERSION}.tar.gz"
+  GIFLIB_URL="https://sourceforge.net/projects/giflib/files/giflib-${GIFLIB_VERSION}.tar.gz/download"
+  wget -O "$GIFLIB_TAR" "$GIFLIB_URL"
+  tar -xzf "$GIFLIB_TAR"
+        (cd "giflib-${GIFLIB_VERSION}" \
+        && make \
+        && make install PREFIX=$BUILD_PREFIX)
+        touch giflib-stamp
+}
+
+
 function build_libpng {
 
     # if [ -e libpng-stamp ]; then return; fi
@@ -392,46 +528,6 @@ function build_libpng {
         && make \
         && make install)
     touch libpng-stamp
-}
-
-
-function build_blosc {
-    if [ -e blosc-stamp ]; then return; fi
-    local cmake=cmake
-    BLOSC_URL="https://github.com/Blosc/c-blosc/archive/refs/tags/v${BLOSC_VERSION}.tar.gz"
-    wget "$BLOSC_URL" -O "c-blosc-${BLOSC_VERSION}.tar.gz"
-    tar -xzf "c-blosc-${BLOSC_VERSION}.tar.gz"
-    (cd c-blosc-${BLOSC_VERSION} \
-        && $cmake -DCMAKE_INSTALL_PREFIX=$BUILD_PREFIX -DCMAKE_POLICY_VERSION_MINIMUM=3.5 . \
-        && make install)
-    if [ -n "$IS_MACOS" ]; then
-        # Fix blosc library id bug
-        for lib in $(ls ${BUILD_PREFIX}/lib/libblosc*.dylib); do
-            install_name_tool -id $lib $lib
-        done
-    fi
-    touch blosc-stamp
-}
-
-
-function build_jsonc {
-    if [ -e jsonc-stamp ]; then return; fi
-    local cmake=cmake
-    wget https://s3.amazonaws.com/json-c_releases/releases/json-c-${JSONC_VERSION}.tar.gz
-    tar -xzf json-c-${JSONC_VERSION}.tar.gz
-    (cd json-c-${JSONC_VERSION} \
-        && $cmake -DCMAKE_INSTALL_PREFIX=$BUILD_PREFIX -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET -DCMAKE_POLICY_VERSION_MINIMUM=3.5 . \
-        && make -j4 \
-        && make install)
-    if [ -n "$IS_MACOS" ]; then
-        for lib in $(ls ${BUILD_PREFIX}/lib/libjson-c.5*.dylib); do
-            install_name_tool -id $lib $lib
-        done
-        for lib in $(ls ${BUILD_PREFIX}/lib/libjson-c.dylib); do
-            install_name_tool -id $lib $lib
-        done
-    fi
-    touch jsonc-stamp
 }
 
 
@@ -470,7 +566,7 @@ function build_libdeflate {
    CXXFLAGS="$CXXFLAGS -g -O2"
 
    if [ -e libdeflate-stamp ]; then return; fi
-   
+
    wget https://github.com/ebiggers/libdeflate/archive/refs/tags/v${LIBDEFLATE_VERSION}.tar.gz -O libdeflate-${LIBDEFLATE_VERSION}.tar.gz
    tar -xvzf libdeflate-${LIBDEFLATE_VERSION}.tar.gz
        local cmake=cmake
@@ -503,25 +599,6 @@ function build_libaec {
 }
 
 
-function build_hdf5 {
-    if [ -e hdf5-stamp ]; then return; fi
-    build_zlib
-    # libaec is a drop-in replacement for szip
-    build_libaec
-    HDF5_VERSION_UNDERSCORED="${HDF5_VERSION//./_}"
-    HDF5_VERSION_SHORT="${HDF5_VERSION_UNDERSCORED%_*}"
-    wget https://support.hdfgroup.org/releases/hdf5/v${HDF5_VERSION_SHORT}/v${HDF5_VERSION_UNDERSCORED}/downloads/hdf5-${HDF5_VERSION}.tar.gz
-    tar -xzf hdf5-${HDF5_VERSION}.tar.gz
-    (cd hdf5-${HDF5_VERSION} \
-        && export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BUILD_PREFIX/lib \
-        && export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$BUILD_PREFIX/lib \
-        && ./configure --with-szlib=$BUILD_PREFIX --prefix=$BUILD_PREFIX \
-        --enable-threadsafe --enable-unsupported --with-pthread=yes \
-        && make -j4 \
-        && make install)
-    touch hdf5-stamp
-}
-
 function build_netcdf {
     CFLAGS="$CFLAGS -g -O2"
     CXXFLAGS="$CXXFLAGS -g -O2"
@@ -547,46 +624,6 @@ function build_netcdf {
 }
 
 
-function build_geos {
-    CFLAGS="$CFLAGS -g -O2"
-    CXXFLAGS="$CXXFLAGS -g -O2"
-    if [ -e geos-stamp ]; then return; fi
-    local cmake=cmake
-    wget http://download.osgeo.org/geos/geos-${GEOS_VERSION}.tar.bz2
-    tar -xjf geos-${GEOS_VERSION}.tar.bz2
-    (cd geos-${GEOS_VERSION} \
-        && mkdir build && cd build \
-        && $cmake .. \
-        -DCMAKE_INSTALL_PREFIX:PATH=$BUILD_PREFIX \
-        -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
-	    -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
-        -DBUILD_SHARED_LIBS=ON \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DENABLE_IPO=ON \
-        -DBUILD_APPS:BOOL=OFF \
-        -DBUILD_TESTING:BOOL=OFF \
-        && $cmake --build . -j4 \
-        && $cmake --install .)
-    touch geos-stamp
-}
-
-function build_expat {
-    if [ -e expat-stamp ]; then return; fi
-    if [ -n "$IS_MACOS" ]; then
-        :
-    else
-
-    EXPAT_VERSION_UNDERSCORED="${EXPAT_VERSION//./_}"
-	wget https://github.com/libexpat/libexpat/releases/download/R_${EXPAT_VERSION_UNDERSCORED}/expat-${EXPAT_VERSION}.tar.bz2
-    tar -xjf expat-${EXPAT_VERSION}.tar.bz2
-        (cd expat-${EXPAT_VERSION} \
-            && ./configure --prefix=$BUILD_PREFIX \
-            && make -j4 \
-            && make install)
-    fi
-    touch expat-stamp
-}
-
 function build_pcre2 {
     if [ -e pcre-stamp ]; then return; fi
     wget https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${PCRE_VERSION}/pcre2-${PCRE_VERSION}.tar.bz2
@@ -596,40 +633,6 @@ function build_pcre2 {
         && make -j4 \
         && make install)
     touch pcre-stamp
-}
-
-
-function build_proj {
-    CFLAGS="$CFLAGS -DPROJ_RENAME_SYMBOLS -g -O2"
-    CXXFLAGS="$CXXFLAGS -DPROJ_RENAME_SYMBOLS -DPROJ_INTERNAL_CPP_NAMESPACE -g -O2"
-    if [ -e proj-stamp ]; then return; fi
-
-    if [ -n "$IS_MACOS" ]; then
-        SQLITE_LIB="$BUILD_PREFIX/lib/libsqlite3.dylib"
-    else
-        SQLITE_LIB="$BUILD_PREFIX/lib/libsqlite3.so"
-    fi
-
-    wget https://download.osgeo.org/proj/proj-${PROJ_VERSION}.tar.gz
-    tar -xzf proj-${PROJ_VERSION}.tar.gz
-
-    local cmake=cmake
-    (cd proj-${PROJ_VERSION} \
-        && $cmake . \
-        -DCMAKE_INSTALL_PREFIX:PATH=$BUILD_PREFIX \
-        -DCMAKE_PREFIX_PATH=${BUILD_PREFIX} \
-        -DCMAKE_INCLUDE_PATH=$BUILD_PREFIX/include \
-        -DSQLite3_INCLUDE_DIR=$BUILD_PREFIX/include \
-        -DSQLite3_LIBRARY=$SQLITE_LIB \
-        -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
-        -DBUILD_SHARED_LIBS=ON \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DENABLE_IPO=ON \
-        -DBUILD_APPS:BOOL=OFF \
-        -DBUILD_TESTING:BOOL=OFF \
-        && $cmake --build . -j$(nproc) \
-        && $cmake --install .)
-    touch proj-stamp
 }
 
 
