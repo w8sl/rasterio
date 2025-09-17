@@ -156,7 +156,7 @@ jobs:
             PACKAGE_DATA=1
             GDAL_DATA="$VCPKG_INSTALL/share/gdal"
             PROJ_DATA="$VCPKG_INSTALL/share/proj"
-            GDAL_VERSION="3.11.3"
+            GDAL_VERSION="3.11.4"
           CIBW_BEFORE_ALL_LINUX: |
             yum install -y wget cmake perl-core zlib-devel ImageMagick bzip2
             cmake --version
