@@ -1,5 +1,5 @@
 PROJ_VERSION=9.6.2
-GDAL_VERSION=3.11.3
+GDAL_VERSION=3.11.4
 SQLITE_VERSION=3500200
 OPENSSL_VERSION=3.5.1
 CURL_VERSION=8.14.1
@@ -93,9 +93,11 @@ fi
 if [ -n "$IS_MACOS" ]; then
     export CFLAGS="$CFLAGS -arch $CMAKE_OSX_ARCHITECTURES -g -O2"
     export CXXFLAGS="$CXXFLAGS -arch $CMAKE_OSX_ARCHITECTURES -g -O2"
+    lib_ext="dylib"
 else
     export CFLAGS="$CFLAGS -g -O2"
     export CXXFLAGS="$CXXFLAGS -g -O2"
+    lib_ext="so"
 fi
 
 echo "Flags:"
@@ -226,13 +228,7 @@ function build_proj {
     CFLAGS="$CFLAGS -DPROJ_RENAME_SYMBOLS"
     CXXFLAGS="$CXXFLAGS -DPROJ_RENAME_SYMBOLS -DPROJ_INTERNAL_CPP_NAMESPACE"
     if [ -e proj-stamp ]; then return; fi
-
-    if [ -n "$IS_MACOS" ]; then
-        SQLITE_LIB="$BUILD_PREFIX/lib/libsqlite3.dylib"
-    else
-        SQLITE_LIB="$BUILD_PREFIX/lib/libsqlite3.so"
-    fi
-
+    
     wget https://download.osgeo.org/proj/proj-${PROJ_VERSION}.tar.gz
     tar -xzf proj-${PROJ_VERSION}.tar.gz
 
@@ -243,7 +239,7 @@ function build_proj {
         -DCMAKE_PREFIX_PATH=${BUILD_PREFIX} \
         -DCMAKE_INCLUDE_PATH=$BUILD_PREFIX/include \
         -DSQLite3_INCLUDE_DIR=$BUILD_PREFIX/include \
-        -DSQLite3_LIBRARY=$SQLITE_LIB \
+        -DSQLite3_LIBRARY=$BUILD_PREFIX/lib/libsqlite3.$lib_ext \
         -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
         -DCMAKE_OSX_ARCHITECTURES=$CMAKE_OSX_ARCHITECTURES \
         -DBUILD_SHARED_LIBS=ON \
@@ -314,7 +310,6 @@ function build_lerc {
     touch lerc-stamp
 }
 
-
 function build_tiff {
 
     if [ -e tiff-stamp ]; then return; fi
@@ -329,23 +324,11 @@ function build_tiff {
     tar -xvf tiff-${TIFF_VERSION}.tar.gz
 
     (cd tiff-${TIFF_VERSION} \
-        && cd build \
-        && $cmake .. \
-           -DCMAKE_BUILD_TYPE=Release \
-           -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
-	       -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
-	       -DCMAKE_OSX_ARCHITECTURES=$CMAKE_OSX_ARCHITECTURES \
-	       -DCMAKE_INSTALL_PREFIX:PATH=$BUILD_PREFIX \
-           -DCMAKE_PREFIX_PATH=${BUILD_PREFIX} \
-	       -DJPEG_SUPPORT=ON \
-           -DZSTD_SUPPORT=ON \
-	       -DWEBP_SUPPORT=ON \
-           -DLERC_SUPPORT=ON \
-        && $cmake --build . -j$(nproc) \
-        && $cmake --install .)
+        && ./configure --prefix=$BUILD_PREFIX --libdir=$BUILD_PREFIX/lib --enable-zstd --enable-webp --enable-lerc --with-jpeg-include-dir=$BUILD_PREFIX/include --with-jpeg-lib-dir=$BUILD_PREFIX/lib \
+        && make -j4 \
+        && make install)
     touch tiff-stamp
 }
-
 
 function build_openjpeg {
 
@@ -667,12 +650,8 @@ function build_gdal {
 
     if [ -n "$IS_MACOS" ]; then
         GEOS_CONFIG="-DGDAL_USE_GEOS=OFF"
-        PCRE2_LIB="$BUILD_PREFIX/lib/libpcre2-8.dylib"
-        SQLITE_LIB="$BUILD_PREFIX/lib/libsqlite3.dylib"
     else
         GEOS_CONFIG="-DGDAL_USE_GEOS=ON"
-        PCRE2_LIB="$BUILD_PREFIX/lib/libpcre2-8.so"
-        SQLITE_LIB="$BUILD_PREFIX/lib/libsqlite3.so"
     fi
 
     # To use GDAL 3.10.3 with PDF: Fix build against Poppler 2025.05.0
@@ -700,7 +679,7 @@ function build_gdal {
         -DGDAL_BUILD_OPTIONAL_DRIVERS=ON \
         -DOGR_BUILD_OPTIONAL_DRIVERS=OFF \
         -DSQLite3_INCLUDE_DIR=$BUILD_PREFIX/include \
-        -DSQLite3_LIBRARY=$SQLITE_LIB \
+        -DSQLite3_LIBRARY=$BUILD_PREFIX/lib/libsqlite3.$lib_ext \
         ${GEOS_CONFIG} \
         -DGDAL_USE_CURL=ON \
         -DGDAL_USE_TIFF=ON \
@@ -737,7 +716,7 @@ function build_gdal {
         -DGDAL_USE_LIBXML2=OFF \
         -DGDAL_USE_PCRE2=ON \
         -DPCRE2_INCLUDE_DIR=$BUILD_PREFIX/include \
-        -DPCRE2-8_LIBRARY=$PCRE2_LIB \
+        -DPCRE2-8_LIBRARY=$BUILD_PREFIX/lib/libpcre2-8.$lib_ext \
         -DGDAL_USE_POSTGRESQL=OFF \
         -DGDAL_ENABLE_POSTGISRASTER=OFF \
         -DGDAL_USE_OPENEXR=OFF \
@@ -781,7 +760,7 @@ function build_gdal {
     build_openjpeg
     suppress build_jsonc
     build_sqlite
-    suppress build_proj
+    build_proj
     suppress build_expat
     suppress build_geos
     suppress build_hdf5
@@ -790,6 +769,13 @@ function build_gdal {
 
 echo "List contents of $BUILD_PREFIX/lib directory"
 ls "$BUILD_PREFIX/lib"
+
+echo " "
+
+if [ -d "$BUILD_PREFIX/lib64" ]; then
+  echo "List contents of $BUILD_PREFIX/lib64 directory"
+  ls "$BUILD_PREFIX/lib64"
+fi
 
 echo "Using GDAL_CONFIG at: $GDAL_CONFIG"
 
