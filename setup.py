@@ -250,8 +250,8 @@ inst_reqs = [
     "affine",
     "attrs",
     "certifi",
-    # Avoid pallets/click#2939.
-    "click>=4.0,!=8.2.*",
+    # Avoid pallets/click>=8.2
+    "click>=4.0,<8.2",
     "cligj>=0.5",
     "importlib-metadata ; python_version < '3.10'",
     "numpy>=1.24",
