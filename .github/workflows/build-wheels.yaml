@@ -13,7 +13,7 @@ on:
       - opened
       - synchronize
       - reopened
- # push:
+  push:
 
 # cancel running jobs on new commit to PR
 concurrency:
@@ -72,7 +72,7 @@ jobs:
            arch: x86_64
          - os: ubuntu-22.04-arm
            arch: aarch64
-         - os: macos-13
+         - os: macos-15-intel
            arch: x86_64
            cmake_osx_architectures: x86_64
            macos_deployment_target: "13.0"
