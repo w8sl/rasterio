@@ -13,7 +13,7 @@ on:
       - opened
       - synchronize
       - reopened
-  push:
+ # push:
 
 # cancel running jobs on new commit to PR
 concurrency:
@@ -213,7 +213,7 @@ jobs:
       - name: Install dependencies and rasterio wheel
         shell: bash
         run: |
-          python -m pip install numpy aiohttp attrs pytest click==8.1.8 mock boto3 packaging hypothesis fsspec requests
+          python -m pip install numpy aiohttp attrs pytest click mock boto3 packaging hypothesis fsspec requests
           python -m pip install --pre --no-deps --find-links dist rasterio
           python -m pip install rasterio
           python -m pip list
