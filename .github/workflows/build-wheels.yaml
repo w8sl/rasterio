@@ -13,7 +13,7 @@ on:
       - opened
       - synchronize
       - reopened
-  #push:
+  push:
 
 # cancel running jobs on new commit to PR
 concurrency:
