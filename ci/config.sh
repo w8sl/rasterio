@@ -146,7 +146,7 @@ function build_hdf5 {
     build_libaec
     HDF5_VERSION_UNDERSCORED="${HDF5_VERSION//./_}"
     HDF5_VERSION_SHORT="${HDF5_VERSION_UNDERSCORED%_*}"
-    wget https://support.hdfgroup.org/releases/hdf5/v${HDF5_VERSION_SHORT}/v${HDF5_VERSION_UNDERSCORED}/downloads/hdf5-${HDF5_VERSION}.tar.gz
+    wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 https://support.hdfgroup.org/releases/hdf5/v${HDF5_VERSION_SHORT}/v${HDF5_VERSION_UNDERSCORED}/downloads/hdf5-${HDF5_VERSION}.tar.gz
     tar -xzf hdf5-${HDF5_VERSION}.tar.gz
     (cd hdf5-${HDF5_VERSION} \
         && export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BUILD_PREFIX/lib \
@@ -163,7 +163,7 @@ function build_blosc {
     if [ -e blosc-stamp ]; then return; fi
     local cmake=cmake
     BLOSC_URL="https://github.com/Blosc/c-blosc/archive/refs/tags/v${BLOSC_VERSION}.tar.gz"
-    wget "$BLOSC_URL" -O "c-blosc-${BLOSC_VERSION}.tar.gz"
+    wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 "$BLOSC_URL" -O "c-blosc-${BLOSC_VERSION}.tar.gz"
     tar -xzf "c-blosc-${BLOSC_VERSION}.tar.gz"
     (cd c-blosc-${BLOSC_VERSION} \
         && $cmake -DCMAKE_INSTALL_PREFIX=$BUILD_PREFIX -DCMAKE_POLICY_VERSION_MINIMUM=3.5 . \
@@ -182,7 +182,7 @@ function build_geos {
 
     if [ -e geos-stamp ]; then return; fi
     local cmake=cmake
-    wget http://download.osgeo.org/geos/geos-${GEOS_VERSION}.tar.bz2
+    wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 http://download.osgeo.org/geos/geos-${GEOS_VERSION}.tar.bz2
     tar -xjf geos-${GEOS_VERSION}.tar.bz2
     (cd geos-${GEOS_VERSION} \
         && mkdir build && cd build \
@@ -205,7 +205,7 @@ function build_geos {
 function build_jsonc {
     if [ -e jsonc-stamp ]; then return; fi
     local cmake=cmake
-    wget https://s3.amazonaws.com/json-c_releases/releases/json-c-${JSONC_VERSION}.tar.gz
+    wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 https://s3.amazonaws.com/json-c_releases/releases/json-c-${JSONC_VERSION}.tar.gz
     tar -xzf json-c-${JSONC_VERSION}.tar.gz
     (cd json-c-${JSONC_VERSION} \
         && $cmake -DCMAKE_INSTALL_PREFIX=$BUILD_PREFIX -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET -DCMAKE_POLICY_VERSION_MINIMUM=3.5 . \
@@ -227,8 +227,8 @@ function build_proj {
     CFLAGS="$CFLAGS -DPROJ_RENAME_SYMBOLS"
     CXXFLAGS="$CXXFLAGS -DPROJ_RENAME_SYMBOLS -DPROJ_INTERNAL_CPP_NAMESPACE"
     if [ -e proj-stamp ]; then return; fi
-    
-    wget https://download.osgeo.org/proj/proj-${PROJ_VERSION}.tar.gz
+
+    wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 https://download.osgeo.org/proj/proj-${PROJ_VERSION}.tar.gz
     tar -xzf proj-${PROJ_VERSION}.tar.gz
 
     local cmake=cmake
@@ -259,7 +259,7 @@ function build_sqlite {
   fi
 
   if [ -e sqlite-stamp ]; then return; fi
-  wget https://www.sqlite.org/2025/sqlite-autoconf-${SQLITE_VERSION}.tar.gz
+  wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 https://www.sqlite.org/2025/sqlite-autoconf-${SQLITE_VERSION}.tar.gz
   tar -xzf sqlite-autoconf-${SQLITE_VERSION}.tar.gz
 
   (cd sqlite-autoconf-${SQLITE_VERSION} \
@@ -277,7 +277,7 @@ function build_expat {
     else
 
     EXPAT_VERSION_UNDERSCORED="${EXPAT_VERSION//./_}"
-	wget https://github.com/libexpat/libexpat/releases/download/R_${EXPAT_VERSION_UNDERSCORED}/expat-${EXPAT_VERSION}.tar.bz2
+	wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 https://github.com/libexpat/libexpat/releases/download/R_${EXPAT_VERSION_UNDERSCORED}/expat-${EXPAT_VERSION}.tar.bz2
     tar -xjf expat-${EXPAT_VERSION}.tar.bz2
         (cd expat-${EXPAT_VERSION} \
             && ./configure --prefix=$BUILD_PREFIX \
@@ -292,7 +292,7 @@ function build_lerc {
 
 	if [ -e lerc-stamp ]; then return; fi
     local cmake=cmake
-    wget https://github.com/Esri/lerc/archive/refs/tags/v${LERC_VERSION}.tar.gz -O lerc-$LERC_VERSION.tar.gz
+    wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 https://github.com/Esri/lerc/archive/refs/tags/v${LERC_VERSION}.tar.gz -O lerc-$LERC_VERSION.tar.gz
     tar -xzf lerc-${LERC_VERSION}.tar.gz
     (cd lerc-${LERC_VERSION} \
         && mkdir cmake_build && cd cmake_build \
@@ -319,7 +319,7 @@ function build_tiff {
     build_zlib
     build_zstd
     build_xz
-    wget https://download.osgeo.org/libtiff/tiff-${TIFF_VERSION}.tar.gz
+    wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 https://download.osgeo.org/libtiff/tiff-${TIFF_VERSION}.tar.gz
     tar -xvf tiff-${TIFF_VERSION}.tar.gz
 
     (cd tiff-${TIFF_VERSION} \
@@ -337,7 +337,7 @@ function build_openjpeg {
    build_tiff
    build_lcms2
 
-   wget https://github.com/uclouvain/openjpeg/archive/refs/tags/v${OPENJPEG_VERSION}.tar.gz -O openjpeg-${OPENJPEG_VERSION}.tar.gz
+   wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 https://github.com/uclouvain/openjpeg/archive/refs/tags/v${OPENJPEG_VERSION}.tar.gz -O openjpeg-${OPENJPEG_VERSION}.tar.gz
    tar -xvzf openjpeg-${OPENJPEG_VERSION}.tar.gz
    local cmake=cmake
   (cd openjpeg-${OPENJPEG_VERSION} \
@@ -363,7 +363,7 @@ function build_libwebp {
     build_giflib
 
     if [ -e libwebp-stamp ]; then return; fi
-    wget https://github.com/webmproject/libwebp/archive/refs/tags/v$LIBWEBP_VERSION.tar.gz -O libwebp-$LIBWEBP_VERSION.tar.gz
+    wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 https://github.com/webmproject/libwebp/archive/refs/tags/v$LIBWEBP_VERSION.tar.gz -O libwebp-$LIBWEBP_VERSION.tar.gz
     tar -xzf libwebp-$LIBWEBP_VERSION.tar.gz
 
     (cd libwebp-$LIBWEBP_VERSION \
@@ -379,7 +379,7 @@ function build_libwebp {
 
 function build_nghttp2 {
     if [ -e nghttp2-stamp ]; then return; fi
-    wget https://github.com/nghttp2/nghttp2/releases/download/v${NGHTTP2_VERSION}/nghttp2-${NGHTTP2_VERSION}.tar.gz
+    wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 https://github.com/nghttp2/nghttp2/releases/download/v${NGHTTP2_VERSION}/nghttp2-${NGHTTP2_VERSION}.tar.gz
     tar -xzf nghttp2-${NGHTTP2_VERSION}.tar.gz
     (cd nghttp2-${NGHTTP2_VERSION}  \
         && ./configure --enable-lib-only --prefix=$BUILD_PREFIX \
@@ -394,8 +394,8 @@ function build_openssl {
 
     TAR_FILE="openssl-$OPENSSL_VERSION.tar.gz"
     SHA_FILE="openssl-$OPENSSL_VERSION.tar.gz.sha256"
-    wget https://github.com/openssl/openssl/releases/download/openssl-$OPENSSL_VERSION/openssl-$OPENSSL_VERSION.tar.gz
-    wget https://github.com/openssl/openssl/releases/download/openssl-$OPENSSL_VERSION/openssl-$OPENSSL_VERSION.tar.gz.sha256
+    wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 https://github.com/openssl/openssl/releases/download/openssl-$OPENSSL_VERSION/openssl-$OPENSSL_VERSION.tar.gz
+    wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 https://github.com/openssl/openssl/releases/download/openssl-$OPENSSL_VERSION/openssl-$OPENSSL_VERSION.tar.gz.sha256
 
     EXPECTED_HASH=$(cut -d ' ' -f1 "$SHA_FILE")
     ACTUAL_HASH=$(sha256sum "$TAR_FILE" | cut -d ' ' -f1)
@@ -424,7 +424,7 @@ function build_curl {
     suppress build_openssl
     build_nghttp2
     local flags="--prefix=$BUILD_PREFIX --with-nghttp2=$BUILD_PREFIX --with-zlib=$BUILD_PREFIX --with-ssl=$BUILD_PREFIX --enable-shared --without-libidn2 --without-libpsl"
-    wget https://curl.se/download/curl-${CURL_VERSION}.tar.gz
+    wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 https://curl.se/download/curl-${CURL_VERSION}.tar.gz
     tar -xzvf curl-${CURL_VERSION}.tar.gz
     (cd curl-${CURL_VERSION} \
         && LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$BUILD_PREFIX/lib:$BUILD_PREFIX/lib64 \
@@ -438,7 +438,7 @@ function build_curl {
 function build_zstd {
 
     if [ -e zstd-stamp ]; then return; fi
-    wget https://github.com/facebook/zstd/archive/v${ZSTD_VERSION}.tar.gz -O zstd-$ZSTD_VERSION.tar.gz
+    wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 https://github.com/facebook/zstd/archive/v${ZSTD_VERSION}.tar.gz -O zstd-$ZSTD_VERSION.tar.gz
     tar -xzf zstd-${ZSTD_VERSION}.tar.gz
 
     if [ -n "$IS_MACOS" ]; then
@@ -467,7 +467,7 @@ function build_zstd {
 
 function build_pcre2 {
     if [ -e pcre-stamp ]; then return; fi
-    wget https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${PCRE_VERSION}/pcre2-${PCRE_VERSION}.tar.bz2
+    wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${PCRE_VERSION}/pcre2-${PCRE_VERSION}.tar.bz2
     tar -xjf "pcre2-${PCRE_VERSION}.tar.bz2"
     (cd pcre2-${PCRE_VERSION} \
         && ./configure --prefix=$BUILD_PREFIX \
@@ -482,7 +482,7 @@ function build_zlib {
     # Careful, this one may cause yum to segfault
     # Fossils directory should also contain latest
     # build_simple zlib $ZLIB_VERSION https://zlib.net/fossils
-    wget https://www.zlib.net/zlib-$ZLIB_VERSION.tar.gz
+    wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 https://github.com/madler/zlib/releases/download/v$ZLIB_VERSION/zlib-$ZLIB_VERSION.tar.gz
     tar -xvf zlib-$ZLIB_VERSION.tar.gz
    (cd zlib-${ZLIB_VERSION} \
     && ./configure --prefix=$BUILD_PREFIX \
@@ -495,7 +495,7 @@ function build_zlib {
 function build_jpeg {
 
     if [ -e jpeg-stamp ]; then return; fi
-    wget http://ijg.org/files/jpegsrc.v${JPEG_VERSION}.tar.gz
+    wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 http://ijg.org/files/jpegsrc.v${JPEG_VERSION}.tar.gz
     tar -xzf jpegsrc.v${JPEG_VERSION}.tar.gz
     (cd jpeg-${JPEG_VERSION} \
         && ./configure --prefix=$BUILD_PREFIX \
@@ -509,7 +509,7 @@ function build_jpeg {
   if [ -e giflib-stamp ]; then return; fi
   GIFLIB_TAR="giflib-${GIFLIB_VERSION}.tar.gz"
   GIFLIB_URL="https://sourceforge.net/projects/giflib/files/giflib-${GIFLIB_VERSION}.tar.gz/download"
-  wget -O "$GIFLIB_TAR" "$GIFLIB_URL"
+  wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 -O "$GIFLIB_TAR" "$GIFLIB_URL"
   tar -xzf "$GIFLIB_TAR"
         (cd "giflib-${GIFLIB_VERSION}" \
         && make \
@@ -524,7 +524,7 @@ function build_libpng {
 
     build_zlib
 
-    wget https://github.com/pnggroup/libpng/archive/refs/tags/v${LIBPNG_VERSION}.tar.gz -O libpng-${LIBPNG_VERSION}.tar.gz
+    wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 https://github.com/pnggroup/libpng/archive/refs/tags/v${LIBPNG_VERSION}.tar.gz -O libpng-${LIBPNG_VERSION}.tar.gz
     tar -xzf libpng-${LIBPNG_VERSION}.tar.gz
     (cd libpng-${LIBPNG_VERSION} \
         && ./configure --prefix=$BUILD_PREFIX \
@@ -536,7 +536,7 @@ function build_libpng {
 
 function build_xz {
   if [ -e xz-stamp ]; then return; fi
-  wget "https://tukaani.org/xz/xz-${XZ_VERSION}.tar.gz"
+  wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 "https://tukaani.org/xz/xz-${XZ_VERSION}.tar.gz"
   tar -xzf "xz-${XZ_VERSION}.tar.gz"
   (cd "xz-${XZ_VERSION}" \
    && ./configure --prefix=$BUILD_PREFIX \
@@ -552,7 +552,7 @@ function build_lcms2 {
 
   build_tiff
 
-  wget https://github.com/mm2/Little-CMS/releases/download/lcms${LCMS2_VERSION}/lcms2-${LCMS2_VERSION}.tar.gz
+  wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 https://github.com/mm2/Little-CMS/releases/download/lcms${LCMS2_VERSION}/lcms2-${LCMS2_VERSION}.tar.gz
   tar -xzf lcms2-${LCMS2_VERSION}.tar.gz
   (cd lcms2-${LCMS2_VERSION} \
     && ./configure --prefix=$BUILD_PREFIX \
@@ -567,7 +567,7 @@ function build_libdeflate {
 
    if [ -e libdeflate-stamp ]; then return; fi
 
-   wget https://github.com/ebiggers/libdeflate/archive/refs/tags/v${LIBDEFLATE_VERSION}.tar.gz -O libdeflate-${LIBDEFLATE_VERSION}.tar.gz
+   wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 https://github.com/ebiggers/libdeflate/archive/refs/tags/v${LIBDEFLATE_VERSION}.tar.gz -O libdeflate-${LIBDEFLATE_VERSION}.tar.gz
    tar -xvzf libdeflate-${LIBDEFLATE_VERSION}.tar.gz
        local cmake=cmake
        (cd libdeflate-${LIBDEFLATE_VERSION} \
@@ -590,7 +590,7 @@ function build_libdeflate {
 function build_libaec {
     if [ -e libaec-stamp ]; then return; fi
     LIBAEC_URL="https://github.com/MathisRosenhauer/libaec/releases/download/v${LIBAEC_VERSION}/libaec-${LIBAEC_VERSION}.tar.gz"
-    wget "$LIBAEC_URL" -O libaec-${LIBAEC_VERSION}.tar.gz
+    wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 "$LIBAEC_URL" -O libaec-${LIBAEC_VERSION}.tar.gz
     tar -xzf libaec-${LIBAEC_VERSION}.tar.gz
     (cd libaec-${LIBAEC_VERSION} \
         && ./configure --prefix=$BUILD_PREFIX \
@@ -606,7 +606,7 @@ function build_netcdf {
     local cmake=cmake
     build_hdf5
     NETCDF_URL="https://github.com/Unidata/netcdf-c/archive/refs/tags/v${NETCDF_VERSION}.tar.gz"
-    wget "$NETCDF_URL" -O "netcdf-c-${NETCDF_VERSION}.tar.gz"
+    wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 "$NETCDF_URL" -O "netcdf-c-${NETCDF_VERSION}.tar.gz"
     tar -xzf netcdf-c-${NETCDF_VERSION}.tar.gz
     (cd netcdf-c-${NETCDF_VERSION} \
         && mkdir build && cd build \
@@ -654,11 +654,11 @@ function build_gdal {
     fi
 
     # To use GDAL 3.10.3 with PDF: Fix build against Poppler 2025.05.0
-    # wget https://github.com/OSGeo/gdal/archive/refs/heads/release/3.10.zip
+    # wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 https://github.com/OSGeo/gdal/archive/refs/heads/release/3.10.zip
     # 7z x 3.10.zip
     # mv gdal-release-3.10 gdal-3.10.3
 
-    wget https://download.osgeo.org/gdal/${GDAL_VERSION}/gdal-${GDAL_VERSION}.tar.gz
+    wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 5 https://download.osgeo.org/gdal/${GDAL_VERSION}/gdal-${GDAL_VERSION}.tar.gz
     tar -xzf gdal-${GDAL_VERSION}.tar.gz
 
     local cmake=cmake
