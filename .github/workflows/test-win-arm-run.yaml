@@ -11,11 +11,12 @@ jobs:
       
       - name: Set up Python 3.14t (freethreaded)
         uses: actions/setup-python@v6
+        continue-on-error: true
         with:
           python-version: '3.14'
           architecture: 'arm64'
           freethreaded: true
-          continue-on-error: true
+          
 
 
       - name: Debug List temp folder
