@@ -1,0 +1,28 @@
+name: Python 3.14t on windows-11-arm
+
+on: [push]
+
+jobs:
+  test-python:
+    runs-on: windows-11-arm
+    steps:
+     
+      - uses: actions/checkout@v6
+      
+      - name: Set up Python 3.14t (freethreaded)
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.14t'
+          architecture: 'arm64'
+          
+      # Verify installation worked
+      - name: Verify Python
+        shell: pwsh
+        run: |
+          python --version
+          python -c "import encodings; print('encodings OK')"
+          python -m pip --version
+          python -m pip install --upgrade pip
+          
+      - name: Test freethreading
+        run: python -c "import sysconfig; print('Free-threaded:', sysconfig.get_config_var('Py_DEBUG') is None and '_t' in sys.abiflags)"
