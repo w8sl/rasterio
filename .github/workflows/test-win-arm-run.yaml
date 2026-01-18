@@ -15,6 +15,7 @@ jobs:
           python-version: '3.14'
           architecture: 'arm64'
           freethreaded: true
+          continue-on-error: true
 
 
       - name: Debug List temp folder
