@@ -5,12 +5,50 @@ on: [push]
 jobs:
   test-python:
     runs-on: windows-11-arm
+
     steps:
-     
       - uses: actions/checkout@v6
-      
-      - name: Set up Python 3.14t (freethreaded)
-        uses: actions/setup-python@v6
-        with:
-          python-version: '3.14t'
-          architecture: 'arm64'
+
+      - name: Check if Python 3.14t is already installed
+        id: check
+        shell: pwsh
+        run: |
+          $paths = @(
+            "C:\hostedtoolcache\windows\Python\3.14.2\arm64-freethreaded",
+            "C:\Python314t"
+          )
+          foreach ($p in $paths) {
+            if (Test-Path "$p\python.exe") {
+              Write-Host "found=$p" >> $env:GITHUB_OUTPUT
+              exit 0
+            }
+          }
+          Write-Host "found=" >> $env:GITHUB_OUTPUT
+
+      - name: Install Python 3.14t manually
+        if: steps.check.outputs.found -eq ''
+        shell: pwsh
+        run: |
+          $url = "https://www.python.org/ftp/python/3.14.2/python-3.14.2-win32-arm64-freethreaded.zip"
+          $zip = "$env:USERPROFILE\python314t.zip"
+          $dest = "C:\Python314t"
+
+          Invoke-WebRequest -Uri $url -OutFile $zip
+
+          # Use 7zip because PowerShell's extractor corrupts python.exe
+          choco install 7zip -y
+          7z x $zip -o"$dest" -y
+
+          echo "$dest" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Add Python to PATH (if preinstalled)
+        if: steps.check.outputs.found != ''
+        shell: pwsh
+        run: |
+          echo "${{ steps.check.outputs.found }}" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Verify Python
+        shell: pwsh
+        run: |
+          python --version
+          python -c "import sys; print(sys._is_gil_enabled())"
