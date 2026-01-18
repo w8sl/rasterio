@@ -11,55 +11,6 @@ jobs:
       
       - name: Set up Python 3.14t (freethreaded)
         uses: actions/setup-python@v6
-        continue-on-error: true
         with:
-          python-version: '3.14'
+          python-version: '3.14t'
           architecture: 'arm64'
-          freethreaded: true
-          
-
-
-      - name: Debug List temp folder
-        shell: pwsh
-        run: |
-          Write-Host "=== TEMP FOLDER CONTENTS ==="
-          Get-ChildItem -Recurse "C:\a\_temp" | Select-Object FullName, Length
-
-      - name: Debug Inspect extracted Python archive
-        shell: pwsh
-        run: |
-          Write-Host "=== Extracted Python directory ==="
-          $dir = Get-ChildItem "C:\a\_temp" -Directory | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-          Write-Host "Using extracted dir: $($dir.FullName)"
-          Get-ChildItem -Recurse $dir.FullName | Select-Object FullName, Length
-
-      - name: Debug Inspect hostedtoolcache
-        shell: pwsh
-        run: |
-          Write-Host "=== Hosted Toolcache Python ==="
-          Get-ChildItem -Recurse "C:\hostedtoolcache\windows\Python" | Select-Object FullName, Length
-
-      - name: Debug Check python.exe file info
-        shell: pwsh
-        run: |
-          Write-Host "=== python.exe details ==="
-          Get-ChildItem "C:\hostedtoolcache\windows\Python\3.14.2\arm64-freethreaded\python.exe" -ErrorAction SilentlyContinue | Format-List *
-
-      - name: Debug Check stdlib presence
-        shell: pwsh
-        run: |
-          Write-Host "=== Checking for standard library ==="
-          Get-ChildItem "C:\hostedtoolcache\windows\Python\3.14.2\arm64-freethreaded\Lib" -ErrorAction SilentlyContinue
-
-          
-      # Verify installation worked
-      - name: Verify Python
-        shell: pwsh
-        run: |
-          python --version
-          python -c "import encodings; print('encodings OK')"
-          python -m pip --version
-          python -m pip install --upgrade pip
-          
-      - name: Test freethreading
-        run: python -c "import sysconfig; print('Free-threaded:', sysconfig.get_config_var('Py_DEBUG') is None and '_t' in sys.abiflags)"
