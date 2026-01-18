@@ -26,7 +26,6 @@ jobs:
           Write-Host "found=" >> $env:GITHUB_OUTPUT
 
       - name: Install Python 3.14t manually
-        if: steps.check.outputs.found -eq ''
         shell: pwsh
         run: |
           $url = "https://www.python.org/ftp/python/3.14.2/python-3.14.2-win32-arm64-freethreaded.zip"
