@@ -9,46 +9,43 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Check if Python 3.14t is already installed
-        id: check
+      - name: Locate or install Python 3.14t
+        id: python
         shell: pwsh
         run: |
-          $paths = @(
+          $candidates = @(
             "C:\hostedtoolcache\windows\Python\3.14.2\arm64-freethreaded",
             "C:\Python314t"
           )
-          foreach ($p in $paths) {
+
+          foreach ($p in $candidates) {
             if (Test-Path "$p\python.exe") {
-              Write-Host "found=$p" >> $env:GITHUB_OUTPUT
+              Write-Host "path=$p" >> $env:GITHUB_OUTPUT
               exit 0
             }
           }
-          Write-Host "found=" >> $env:GITHUB_OUTPUT
 
-      - name: Install Python 3.14t manually
-        shell: pwsh
-        run: |
-          $url = "https://github.com/actions/python-versions/releases/download/3.14.2-20014991423/python-3.14.2-win32-arm64-freethreaded.zip"
-          
-          $zip = "$env:USERPROFILE\python314t.zip"
+          # Not found — install manually
+          $url  = "https://github.com/actions/python-versions/releases/download/3.14.2-20014991423/python-3.14.2-win32-arm64-freethreaded.zip"
+          $zip  = "$env:USERPROFILE\python314t.zip"
           $dest = "C:\Python314t"
 
           Invoke-WebRequest -Uri $url -OutFile $zip
 
-          # Use 7zip because PowerShell's extractor corrupts python.exe
           choco install 7zip -y
           7z x $zip -o"$dest" -y
 
-          echo "$dest" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          Write-Host "path=$dest" >> $env:GITHUB_OUTPUT
 
-      - name: Add Python to PATH (if preinstalled)
-        if: steps.check.outputs.found != ''
+      - name: Add Python 3.14t to PATH (prepend)
         shell: pwsh
         run: |
-          echo "${{ steps.check.outputs.found }}" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          $py = "${{ steps.python.outputs.path }}"
+          "$py" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8
 
-      - name: Verify Python
+      - name: Verify Python 3.14t
         shell: pwsh
         run: |
           python --version
           python -c "import sys; print(sys._is_gil_enabled())"
+
