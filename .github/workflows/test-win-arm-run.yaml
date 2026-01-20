@@ -37,11 +37,14 @@ jobs:
 
           Write-Host "path=$dest" >> $env:GITHUB_OUTPUT
 
-      - name: Add Python 3.14t to PATH (prepend)
+      
+      - name: Add Python 3.14t to PATH
         shell: pwsh
         run: |
-          $py = "${{ steps.python.outputs.path }}"
-          "$py" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8
+           $py = "${{ steps.python.outputs.path }}"
+           Set-Content -Path $env:GITHUB_PATH -Value $py -Encoding ascii
+           Add-Content -Path $env:GITHUB_PATH -Value "$py\Scripts" -Encoding ascii
+
 
       - name: Verify Python 3.14t
         shell: pwsh
