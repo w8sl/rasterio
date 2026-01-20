@@ -28,7 +28,8 @@ jobs:
       - name: Install Python 3.14t manually
         shell: pwsh
         run: |
-          $url = "https://www.python.org/ftp/python/3.14.2/python-3.14.2-win32-arm64-freethreaded.zip"
+          $url = "https://github.com/actions/python-versions/releases/download/3.14.2-20014991423/python-3.14.2-win32-arm64-freethreaded.zip"
+          
           $zip = "$env:USERPROFILE\python314t.zip"
           $dest = "C:\Python314t"
 
