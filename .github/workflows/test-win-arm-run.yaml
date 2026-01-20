@@ -13,6 +13,7 @@ jobs:
         id: python
         shell: pwsh
         run: |
+          # Candidate locations for preinstalled Python 3.14t
           $candidates = @(
             "C:\hostedtoolcache\windows\Python\3.14.2\arm64-freethreaded",
             "C:\Python314t"
@@ -25,30 +26,27 @@ jobs:
             }
           }
 
-          # Not found — install manually
-          $url  = "https://github.com/actions/python-versions/releases/download/3.14.2-20014991423/python-3.14.2-win32-arm64-freethreaded.zip"
-          $zip  = "$env:USERPROFILE\python314t.zip"
-          $dest = "C:\Python314t"
+          # Not found — install Python 3.14t silently
+          $url = "https://www.python.org/ftp/python/3.14.2/python-3.14.2-arm64.exe"
+          $installer = "$env:USERPROFILE\python314t-installer.exe"
+          $target = "C:\Python314t"
 
-          Invoke-WebRequest -Uri $url -OutFile $zip
+          Invoke-WebRequest -Uri $url -OutFile $installer
 
-          choco install 7zip -y
-          7z x $zip -o"$dest" -y
+          # Silent install, all users, prepend PATH automatically
+          & $installer /quiet InstallAllUsers=1 PrependPath=1 TargetDir="$target"
 
-          Write-Host "path=$dest" >> $env:GITHUB_OUTPUT
+          Write-Host "path=$target" >> $env:GITHUB_OUTPUT
 
-      
-      - name: Add Python 3.14t to PATH
+      - name: Add Python 3.14t to PATH (ensure override)
         shell: pwsh
         run: |
-           $py = "${{ steps.python.outputs.path }}"
-           Set-Content -Path $env:GITHUB_PATH -Value $py -Encoding ascii
-           Add-Content -Path $env:GITHUB_PATH -Value "$py\Scripts" -Encoding ascii
-
+          $py = "${{ steps.python.outputs.path }}"
+          Set-Content -Path $env:GITHUB_PATH -Value $py -Encoding ascii
 
       - name: Verify Python 3.14t
         shell: pwsh
         run: |
           python --version
+          Get-Command python | Format-List *
           python -c "import sys; print(sys._is_gil_enabled())"
-
