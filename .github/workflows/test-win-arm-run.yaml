@@ -13,13 +13,13 @@ jobs:
         run: Remove-Item -Path "C:\hostedtoolcache\windows\Python\3.14.2" -Recurse -Force
         shell: powershell
       
-      - name: Set up Python 3.14t (freethreaded)
+      - name: Set up Python 3.14
         uses: actions/setup-python@v6
         continue-on-error: true
         with:
           python-version: '3.14'
           architecture: 'arm64'
-          freethreaded: true
+          #freethreaded: true
           
 
       - name: Debug List temp folder
