@@ -9,35 +9,8 @@ jobs:
      
       - uses: actions/checkout@v6
       
-      - name: Set up Python 3.14t (freethreaded) from NuGet
-        shell: pwsh
-        run: |
-          $version = "3.14.2"
-          $pkgUrl = "https://api.nuget.org/v3-flatcontainer/pythonarm64-freethreaded/$version/pythonarm64-freethreaded.$version.nupkg"
-          $installRoot = "$env:GITHUB_WORKSPACE/python"
-          
-          New-Item -ItemType Directory -Force -Path $installRoot | Out-Null
-          
-          # Download the exact NuGet package specified
-          $pkgPath = Join-Path $installRoot "pythonarm64-freethreaded.$version.nupkg"
-          Invoke-WebRequest -Uri $pkgUrl -OutFile $pkgPath
-          
-          # Extract (nupkg is just a ZIP archive)
-          Expand-Archive -LiteralPath $pkgPath -DestinationPath $installRoot -Force
-          
-          # Find python.exe recursively (typically under tools/)
-          $pythonExe = Get-ChildItem -Recurse -Filter "python.exe" -Path $installRoot | Select-Object -First 1
-          
-          if (-not $pythonExe) {
-            Write-Error "python.exe not found after extraction"
-            exit 1
-          }
-          
-          # Export paths for use in subsequent steps
-          echo "PYTHON_ROOT=$($pythonExe.DirectoryName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          echo "$($pythonExe.DirectoryName)" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          
-          # Verify the exact installation
-          Write-Output "Python found at: $($pythonExe.FullName)"
-          & $pythonExe.FullName --version
-          & $pythonExe.FullName -c "import sysconfig; print('Free-threaded:', sysconfig.get_config_var('Py_GIL_DISABLED') == 2)"
+      - name: Set up Python 3.14t (freethreaded)
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.14t'
+          architecture: 'arm64'
