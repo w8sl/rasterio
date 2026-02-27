@@ -1,9 +1,9 @@
 name: Import PR Diff from OtherRepository
 
 on:
-  push:
-    branches:
-      - patches
+ # push:
+  #  branches:
+   #   - patches
 
 jobs:
   import-diff:
