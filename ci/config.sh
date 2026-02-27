@@ -370,6 +370,7 @@ echo "Compiling libraries ..."
 
 function build_hdf5 {
 	if [ -e hdf5-stamp ]; then return; fi
+	patch -p1 -d /path/to/project/subdirectory < CI/patches/HDFGroup_hdf5_PR-5850.diff
 	build_zlib
 	# libaec is a drop-in replacement for szip
 	build_libaec
