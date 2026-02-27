@@ -1,0 +1,66 @@
+name: Import PR Diff from OtherRepository
+
+on:
+  push:
+    branches:
+      - patches
+
+jobs:
+  import-diff:
+    runs-on: ubuntu-latest
+
+    env:
+      SOURCE_REPO: "https://github.com/HDFGroup/hdf5"
+      PR_NUMBER: "5850"
+
+    steps:
+      - name: Checkout patches
+        uses: actions/checkout@v5
+        with:
+          ref: patches
+   
+      - name: Fetch PR diff from OtherRepository
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Fetching diff for PR #${PR_NUMBER} from ${SOURCE_REPO}..."
+
+          curl -fsSL \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github.v3.diff" \
+            "https://api.github.com/repos/${SOURCE_REPO}/pulls/${PR_NUMBER}" \
+            -o "pr-${PR_NUMBER}.diff"
+
+          echo "Diff downloaded successfully."
+          echo "--- Diff stats ---"
+          wc -l "pr-${PR_NUMBER}.diff"
+
+      - name: Store diff in CI/patches directory
+        run: |
+          mkdir -p CI/patches
+
+          REPO_SLUG=$(echo "${SOURCE_REPO}" | tr '/' '_')
+          DIFF_FILENAME="CI/patches/${REPO_SLUG}_PR-${PR_NUMBER}.diff"
+
+          mv "pr-${PR_NUMBER}.diff" "${DIFF_FILENAME}"
+
+          echo "Stored diff at: ${DIFF_FILENAME}"
+
+      - name: Commit and push diff to patches_branch
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          REPO_SLUG=$(echo "${SOURCE_REPO}" | tr '/' '_')
+          DIFF_FILENAME="CI/patches/${REPO_SLUG}_PR-${PR_NUMBER}.diff"
+
+          git add "${DIFF_FILENAME}"
+
+          # Only commit if there's actually something new
+          if git diff --cached --quiet; then
+            echo "No changes to commit — diff may already exist."
+          else
+            git commit -m "ci: import diff from ${SOURCE_REPO} PR #${PR_NUMBER}"
+            git push origin patches_branch
+            echo "Diff committed and pushed to patches_branch."
+          fi
