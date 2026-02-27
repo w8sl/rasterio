@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      SOURCE_REPO: "https://github.com/HDFGroup/hdf5.git"
+      SOURCE_REPO: "HDFGroup/hdf5"
       PR_NUMBER: "5850"
 
     steps:
