@@ -46,7 +46,7 @@ jobs:
 
           echo "Stored diff at: ${DIFF_FILENAME}"
 
-      - name: Commit and push diff to patches_branch
+      - name: Commit and push diff to patches
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -61,6 +61,6 @@ jobs:
             echo "No changes to commit — diff may already exist."
           else
             git commit -m "ci: import diff from ${SOURCE_REPO} PR #${PR_NUMBER}"
-            git push origin patches_branch
-            echo "Diff committed and pushed to patches_branch."
+            git push origin patches
+            echo "Diff committed and pushed to patches"
           fi
