@@ -343,7 +343,7 @@ PROJ_URL="https://download.osgeo.org/proj/proj-${PROJ_VERSION}.tar.gz"
 PROJ_FNAME="proj-${PROJ_VERSION}"
 fetch_untar ${PROJ_URL} ${PROJ_FNAME}.tar.gz
 
-SQLITE_URL="https://www.sqlite.org/2025/sqlite-autoconf-${SQLITE_VERSION}.tar.gz"
+SQLITE_URL="https://www.sqlite.org/2026/sqlite-autoconf-${SQLITE_VERSION}.tar.gz"
 SQLITE_FNAME="sqlite-autoconf-${SQLITE_VERSION}"
 fetch_untar ${SQLITE_URL} ${SQLITE_FNAME}.tar.gz
 
