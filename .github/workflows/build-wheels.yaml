@@ -9,7 +9,7 @@ on:
         required: true
         default: '0'
   push:
-    branches: [ main, maint-1.4 ]
+   # branches: [ main, maint-1.4 ]
   release:
     types: [ released, prereleased ]
   pull_request:  # also build on PRs touching this file
