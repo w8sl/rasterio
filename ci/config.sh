@@ -255,7 +255,7 @@ fetch_untar ${BLOSC_URL} -O ${BLOSC_FNAME}.tar.gz
 
 CURL_URL="https://curl.se/download/curl-${CURL_VERSION}.tar.gz"
 CURL_FNAME="curl-${CURL_VERSION}"
-CURL_SHA256="e9274a5f8ab5271c0e0e6762d2fce194d5f98acc568e4ce816845b2dcc0cf88f"
+CURL_SHA256="2a2c11db4c122691aa23b4363befda1bfd801770bfebf41e1d21cee4f2ab0f71"
 fetch_untar ${CURL_URL} ${CURL_FNAME}.tar.gz ${CURL_SHA256}
 
 if [ -n "$IS_MACOS" ]; then
