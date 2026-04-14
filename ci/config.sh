@@ -14,7 +14,7 @@ GIFLIB_VERSION=5.2.2
 JSONC_VERSION=0.18
 XZ_VERSION=5.8.3
 LCMS2_VERSION=2.17
-HDF5_VERSION=2.1.0
+HDF5_VERSION=2.1.1
 LIBAEC_VERSION=1.1.6
 NETCDF_VERSION=4.10.0
 GEOS_VERSION=3.14.1
@@ -282,7 +282,7 @@ fetch_untar ${GEOS_URL} ${GEOS_FNAME}.tar.bz2
 
 HDF5_URL=http://github.com/HDFGroup/hdf5/releases/download/${HDF5_VERSION}/hdf5-${HDF5_VERSION}.tar.gz
 HDF5_FNAME="hdf5-${HDF5_VERSION}"
-HDF5_SHA256="ce7f5515a95d588b8606c3fb50643f8b88ac52ffbbde9c63bb1edca6a256e964"
+HDF5_SHA256="efff93b5a904d66e8f626d7da60b5eedc9faf544be27dbabbaa87967b8ad798b"
 fetch_untar ${HDF5_URL} ${HDF5_FNAME}.tar.gz ${HDF5_SHA256}
 
 JPEGTURBO_URL="https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/${JPEGTURBO_VERSION}/libjpeg-turbo-${JPEGTURBO_VERSION}.tar.gz"
