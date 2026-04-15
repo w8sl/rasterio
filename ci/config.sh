@@ -276,11 +276,11 @@ GIFLIB_FNAME="giflib-${GIFLIB_VERSION}"
 GIFLIB_SHA256="be7ffbd057cadebe2aa144542fd90c6838c6a083b5e8a9048b8ee3b66b29d5fb"
 fetch_untar ${GIFLIB_URL} -O ${GIFLIB_FNAME}.tar.gz ${GIFLIB_SHA256}
 
-GEOS_URL="http://download.osgeo.org/geos/geos-${GEOS_VERSION}.tar.bz2"
+GEOS_URL="https://download.osgeo.org/geos/geos-${GEOS_VERSION}.tar.bz2"
 GEOS_FNAME="geos-${GEOS_VERSION}"
 fetch_untar ${GEOS_URL} ${GEOS_FNAME}.tar.bz2
 
-HDF5_URL=http://github.com/HDFGroup/hdf5/releases/download/${HDF5_VERSION}/hdf5-${HDF5_VERSION}.tar.gz
+HDF5_URL=https://github.com/HDFGroup/hdf5/releases/download/${HDF5_VERSION}/hdf5-${HDF5_VERSION}.tar.gz
 HDF5_FNAME="hdf5-${HDF5_VERSION}"
 HDF5_SHA256="efff93b5a904d66e8f626d7da60b5eedc9faf544be27dbabbaa87967b8ad798b"
 fetch_untar ${HDF5_URL} ${HDF5_FNAME}.tar.gz ${HDF5_SHA256}
@@ -355,7 +355,7 @@ XZ_FNAME="xz-${XZ_VERSION}"
 XZ_SHA256="3d3a1b973af218114f4f889bbaa2f4c037deaae0c8e815eec381c3d546b974a0"
 fetch_untar ${XZ_URL} ${XZ_FNAME}.tar.gz ${XZ_SHA256}
 
-ZLIB_URL="http://github.com/madler/zlib/releases/download/v$ZLIB_VERSION/zlib-$ZLIB_VERSION.tar.gz"
+ZLIB_URL="https://github.com/madler/zlib/releases/download/v$ZLIB_VERSION/zlib-$ZLIB_VERSION.tar.gz"
 ZLIB_FNAME="zlib-${ZLIB_VERSION}"
 ZLIB_SHA256="bb329a0a2cd0274d05519d61c667c062e06990d72e125ee2dfa8de64f0119d16"
 fetch_untar $ZLIB_URL ${ZLIB_FNAME}.tar.gz ${ZLIB_SHA256}
