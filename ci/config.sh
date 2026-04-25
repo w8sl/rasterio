@@ -331,7 +331,7 @@ fetch_untar ${OPENJPEG_URL} -O ${OPENJPEG_FNAME}.tar.gz
 
 OPENSSL_URL="https://github.com/openssl/openssl/releases/download/openssl-$OPENSSL_VERSION/openssl-$OPENSSL_VERSION.tar.gz"
 OPENSSL_FNAME="openssl-${OPENSSL_VERSION}"
-OPENSSL_SHA256="b1bfedcd5b289ff22aee87c9d600f515767ebf45f77168cb6d64f231f518a82e"
+OPENSSL_SHA256="aaf51a1fe064384f811daeaeb4ec4dce7340ec8bd893027eee676af31e83a04f"
 fetch_untar ${OPENSSL_URL} ${OPENSSL_FNAME}.tar.gz ${OPENSSL_SHA256}
 
 PCRE2_URL="https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${PCRE_VERSION}/pcre2-${PCRE_VERSION}.tar.bz2"
