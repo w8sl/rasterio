@@ -10,7 +10,7 @@ LIBWEBP_VERSION=1.6.0
 ZSTD_VERSION=1.5.7
 LIBPNG_VERSION=1.6.58
 OPENJPEG_VERSION=2.5.4
-GIFLIB_VERSION=6.1.3
+GIFLIB_VERSION=5.2.2
 JSONC_VERSION=0.18
 XZ_VERSION=5.8.3
 LCMS2_VERSION=2.17
@@ -273,7 +273,7 @@ fetch_untar ${GDAL_URL} ${GDAL_FNAME}.tar.gz
 
 GIFLIB_URL="https://sourceforge.net/projects/giflib/files/giflib-${GIFLIB_VERSION}.tar.gz/download"
 GIFLIB_FNAME="giflib-${GIFLIB_VERSION}"
-GIFLIB_SHA256="b65b66b99f0424b93525f987386f22fc5efb9da2bfc92ad4a532249aaffbab0e"
+GIFLIB_SHA256="be7ffbd057cadebe2aa144542fd90c6838c6a083b5e8a9048b8ee3b66b29d5fb"
 fetch_untar ${GIFLIB_URL} -O ${GIFLIB_FNAME}.tar.gz ${GIFLIB_SHA256}
 
 GEOS_URL="https://download.osgeo.org/geos/geos-${GEOS_VERSION}.tar.bz2"
