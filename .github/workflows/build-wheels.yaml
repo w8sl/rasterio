@@ -27,7 +27,7 @@ permissions:
   actions: read
 
 env:
-  GDAL_VERSION: 3.12.1
+  GDAL_VERSION: 3.12.4
 
 jobs:
 
@@ -140,7 +140,7 @@ jobs:
         if: ${{ matrix.msvc_arch }}
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.3.0
+        uses: pypa/cibuildwheel@v3.4.1
         env:
           CIBW_ENABLE: cpython-freethreading
           CIBW_SKIP: '*pp* *musllinux*'
