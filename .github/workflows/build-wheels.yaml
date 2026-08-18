@@ -152,7 +152,6 @@ jobs:
             GDAL_VERSION=${{ env.GDAL_VERSION }}
           CIBW_ARCHS_WINDOWS: "${{ matrix.arch }}"
           CIBW_ENVIRONMENT_WINDOWS:
-            MSVC_ARCH=${{ matrix.msvc_arch }}
             VCPKG_INSTALL="C:/vcpkg/installed/${{ matrix.triplet }}"
             GDAL_INCLUDE_PATH="$VCPKG_INSTALL/include"
             GDAL_LIBRARY_PATH="$VCPKG_INSTALL/lib"
