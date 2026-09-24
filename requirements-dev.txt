@@ -15,7 +15,7 @@ pytest-cov>=2.2.0
 pytest-randomly==3.10.1
 requests
 s3fs>=2025.9.0
-shapely
+shapely==2.2.0rc1
 sphinx
 sphinx-click
 sphinx-rtd-theme
