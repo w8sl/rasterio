@@ -17,6 +17,7 @@
        { "name": "openssl", "version": "3.6.5" },
        { "name": "sqlite3", "version": "3.53.4" },
        { "name": "libpng", "version": "1.6.58" },
+       { "name": "libq", "version": "18.4" },
        { "name": "pcre2", "version": "10.49" },
        { "name": "expat", "version": "2.8.5" },
        { "name": "hdf5", "version": "2.2.0#0" },
