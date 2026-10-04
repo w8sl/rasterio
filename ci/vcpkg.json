@@ -7,7 +7,7 @@
     ],
     "overrides": [       
        { "name": "curl", "version": "8.22.0" },
-       { "name": "netcdf", "version": "4.9.3#5" }, 
+       { "name": "netcdf-c", "version": "4.9.3#5" }, 
        { "name": "geos", "version": "3.15.0" },
        { "name": "proj", "version": "9.9.0" },
        { "name": "liblzma", "version": "5.8.4" },
